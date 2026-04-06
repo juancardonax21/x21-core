@@ -573,7 +573,7 @@ html, body {
     <!-- PRÓXIMAMENTE -->
     <div class="app-card coming">
       <div class="app-icon">◎</div>
-      <div class="app-name" id="module2name">Propuestas</div>
+      <div class="app-name" id="module2name">Pitch</div>
       <div class="app-desc">Sistema para elaborar y gestionar propuestas comerciales. Próximamente.</div>
       <span class="app-badge badge-soon">Próximamente</span>
     </div>
@@ -694,6 +694,7 @@ html, body {
 // CONFIGURACIÓN — SUSTITUYE ESTA URL DESPUÉS DE PUBLICAR EL APPS SCRIPT
 // ══════════════════════════════════════════════════════════
 const API_URL = "https://script.google.com/macros/s/AKfycbw1kQg_RpUBITMMLYIyAgFF9sKJ2TrYH5RSlKHNMQMzRXnbAETOGuEziH6JwulHByzYxg/exec";
+const DEMO_MODE = !API_URL.startsWith("https://");
 
 // ── Estado global ─────────────────────────────────────────
 let token   = sessionStorage.getItem("x21_token") || null;
@@ -748,8 +749,7 @@ function updateDots() {
 function clearError() { $("loginError").textContent = ""; }
 
 async function doLogin() {
-  if (API_URL === "PEGA_AQUI_LA_URL_DE_TU_APPS_SCRIPT") {
-    // Modo demo sin API — permite acceso con 0000
+  if (DEMO_MODE) {
     if (pin === "0000") {
       token = "demo";
       sessionStorage.setItem("x21_token", token);
@@ -817,8 +817,7 @@ const STATUS_L = { idea:"Idea", incubando:"Incubando", desarrollo:"Desarrollo", 
 async function loadIdeas() {
   $("labGrid").innerHTML = `<div class="lab-loading"><div class="spinner"></div> Cargando ideas...</div>`;
   try {
-    if (API_URL === "PEGA_AQUI_LA_URL_DE_TU_APPS_SCRIPT") {
-      // Modo demo — datos de ejemplo
+    if (DEMO_MODE) {
       ideas = [
         { id:"1", titulo:"Podcast de X21", descripcion:"Serie de episodios cortos sobre innovación y consultoría.", categoria:"Contenido", estado:"incubando", etiquetas:["audio","marca"], notas:"Inspirado en Acquired y Lenny's Podcast", creado:"2025-01-10T10:00:00Z", actualizado:"2025-01-10T10:00:00Z" },
         { id:"2", titulo:"Template de propuesta interactiva", descripcion:"Web-app que genera propuestas personalizadas a partir de un briefing.", categoria:"Producto", estado:"desarrollo", etiquetas:["comercial","automatización"], notas:"", creado:"2025-01-08T10:00:00Z", actualizado:"2025-01-08T10:00:00Z" },
@@ -944,8 +943,7 @@ async function saveForm() {
   $("btnSave").disabled = true;
 
   try {
-    if (API_URL === "PEGA_AQUI_LA_URL_DE_TU_APPS_SCRIPT") {
-      // Modo demo
+    if (DEMO_MODE) {
       if (editId) {
         const idx = ideas.findIndex(i=>i.id===editId);
         if (idx>-1) ideas[idx] = {...ideas[idx], ...params, actualizado: new Date().toISOString()};
@@ -1015,7 +1013,7 @@ async function changeStatus(id, newStatus) {
   const idx = ideas.findIndex(i=>i.id===id);
   if (idx === -1) return;
   ideas[idx].estado = newStatus;
-  if (API_URL !== "PEGA_AQUI_LA_URL_DE_TU_APPS_SCRIPT") {
+  if (!DEMO_MODE) {
     await api({ action:"updateIdea", id, estado: newStatus });
   }
   toast(`Movido a ${STATUS_L[newStatus]}`);
@@ -1026,7 +1024,7 @@ async function changeStatus(id, newStatus) {
 async function deleteIdea(id) {
   if (!confirm("¿Eliminar esta idea del Lab?")) return;
   ideas = ideas.filter(i=>i.id!==id);
-  if (API_URL !== "PEGA_AQUI_LA_URL_DE_TU_APPS_SCRIPT") {
+  if (!DEMO_MODE) {
     await api({ action:"deleteIdea", id });
   }
   toast("Idea eliminada");
