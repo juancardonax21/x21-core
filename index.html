@@ -159,7 +159,8 @@ html, body { font-family: var(--font-ui); background: var(--black); color: var(-
       <img src="assets/x21-logo.png" alt="X21"
            onerror="this.outerHTML='<span style=\'font-size:26px;font-weight:800;letter-spacing:-1px\'>X21</span>'">
     </div>
-    <button class="btn-logout" onclick="doLogout()">Cerrar sesión</button>
+    <a href="configuracion.html" style="padding:6px 14px;border-radius:100px;font-size:13px;font-weight:500;color:var(--gray4);text-decoration:none;transition:all var(--t);" onmouseover="this.style.color='white'" onmouseout="this.style.color='var(--gray4)'">⚙ Configuración</a>
+      <button class="btn-logout" onclick="doLogout()">Cerrar sesión</button>
   </header>
 
   <div class="home-hero">
@@ -180,10 +181,20 @@ html, body { font-family: var(--font-ui); background: var(--black); color: var(-
       </div>
     </a>
 
-    <div class="app-card mod-pitch coming">
+    <a class="app-card mod-pitch" href="pitch.html">
       <div class="app-icon">◎</div>
       <div class="app-name">Pitch</div>
-      <div class="app-desc">Sistema para elaborar y gestionar propuestas comerciales.</div>
+      <div class="app-desc">Pipeline comercial y generador de propuestas. Del lead a la firma.</div>
+      <div class="app-meta">
+        <span class="app-badge badge-live">Activo</span>
+        <span class="app-arrow">→</span>
+      </div>
+    </a>
+
+    <div class="app-card coming">
+      <div class="app-icon">○</div>
+      <div class="app-name">Clientes</div>
+      <div class="app-desc">Base de datos de clientes activos. Próximamente.</div>
       <div class="app-meta">
         <span class="app-badge badge-soon">Próximamente</span>
       </div>
@@ -191,8 +202,8 @@ html, body { font-family: var(--font-ui); background: var(--black); color: var(-
 
     <div class="app-card coming">
       <div class="app-icon">○</div>
-      <div class="app-name">Módulo 3</div>
-      <div class="app-desc">Próxima funcionalidad del sistema. En definición.</div>
+      <div class="app-name">Facturación</div>
+      <div class="app-desc">Gestión y seguimiento de facturas. Próximamente.</div>
       <div class="app-meta">
         <span class="app-badge badge-soon">Próximamente</span>
       </div>
