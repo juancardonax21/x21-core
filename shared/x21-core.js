@@ -7,7 +7,7 @@
 
 // ── CONFIGURACIÓN CENTRAL ─────────────────────────────────
 const X21 = {
-  API_URL:   "https://script.google.com/macros/s/AKfycbztqVfo6bqYY6AZj3LYzk35hzdxODUeGzhzlUl4kNpulcKnp-hndJGOnCSyP5MSlyWAEw/exec",
+  API_URL:   "https://script.google.com/macros/s/AKfycbyuF2_zjOgAVH4meCHnMTdCllAJOQWZjonrDQdoeoTK5OgnCQ93QCBLBwzyVMGCFNA-2Q/exec",
   LOCAL_PIN: "0000",
   VERSION:   "2.1"
 };
