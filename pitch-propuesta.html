@@ -895,25 +895,30 @@ function renderResumen() {
 
 // ── SAVE DRAFT ────────────────────────────────────────────
 async function saveDraft() {
-  const payload = buildPayload();
+  await saveDraftMeta();
+  toast('Borrador guardado');
+}
+
+// Guarda solo metadatos (sin datos_json) para evitar payloads grandes
+async function saveDraftMeta() {
+  const cliente  = $('p-cliente').value;
+  const titulo   = $('p-subtitulo').value;
+  const { grand } = calcTotals();
   try {
     if (isLocalSession()) {
-      localStorage.setItem('x21_propuesta_draft', JSON.stringify(payload));
+      localStorage.setItem('x21_propuesta_meta', JSON.stringify({ cliente, titulo, tipo, idioma }));
     } else {
       if (propId) {
-        await apiCall({ action:'updatePropuesta', id:propId, datos_json: JSON.stringify(payload),
-          cliente: payload.cliente, titulo: payload.subtitulo, tipo, idioma,
-          importe: calcTotals().grand });
+        await apiCall({ action:'updatePropuesta', id:propId,
+          cliente, titulo, tipo, idioma, importe: grand });
       } else {
         const res = await apiCall({ action:'addPropuesta',
-          pitch_id: pitchId||'', cliente: payload.cliente, titulo: payload.subtitulo,
-          tipo, idioma, importe: calcTotals().grand, estado:'borrador',
-          datos_json: JSON.stringify(payload) });
+          pitch_id: pitchId||'', cliente, titulo,
+          tipo, idioma, importe: grand, estado:'borrador' });
         if (res.ok) propId = res.id;
       }
     }
-    toast('Borrador guardado');
-  } catch(e) { toast('Error al guardar'); }
+  } catch(e) { console.error('saveDraftMeta error:', e); }
 }
 
 function buildPayload() {
@@ -954,17 +959,29 @@ async function generateDoc() {
   if (!$('send-body').value) $('send-body').value = emailBodyTpl;
 
   try {
-    // Primero guarda el borrador en el Sheet con todos los datos
-    await saveDraft();
-    if (!propId) {
-      toast('Error: no se pudo guardar el borrador antes de generar');
-      return;
-    }
-    // Llama al generador — lee los datos directamente del Sheet por propId
+    // Guarda borrador (sin datos_json grandes — solo metadatos)
+    await saveDraftMeta();
+
+    // Payload compacto del documento — solo los campos necesarios para el Doc
+    const docPayload = {
+      cliente:     $('p-cliente').value,
+      subtitulo:   $('p-subtitulo').value,
+      fecha:       $('p-fecha').value,
+      objetivo:    $('p-objetivo').value,
+      enfoque:     $('p-enfoque').value,
+      fases,
+      equipo_bio:  $('p-equipo-bio').value,
+      otros,
+      tipo,
+      idioma,
+      totales:     calcTotals()
+    };
+
     const res = await apiCall({
       action:  'generarPropuesta',
-      propId:  propId,
-      pitchId: pitchId || ''
+      propId:  propId || '',
+      pitchId: pitchId || '',
+      doc:     JSON.stringify(docPayload)
     });
 
     if (!res.ok) throw new Error(res.error || 'Error desconocido');
