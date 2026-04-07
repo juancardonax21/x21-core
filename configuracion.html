@@ -264,6 +264,13 @@ html,body { font-family:var(--font-ui); background:var(--bg); color:var(--black)
       <div class="section-title">Cláusulas legales</div>
       <div class="section-desc">Textos fijos que aparecen en el pie de cada propuesta. Puedes tener versiones en español e inglés, y distintas cláusulas según el tipo de contrato.</div>
 
+      <div class="field-group" style="margin-bottom:24px">
+        <label class="field-label">Aviso de confidencialidad (común a todas las propuestas)</label>
+        <textarea class="text-field" id="conf-disclaimer" style="min-height:80px"
+          placeholder="Esta propuesta ha sido preparada por X21 para uso exclusivo de..."></textarea>
+        <div style="font-size:11px;color:#aaa;margin-top:4px">Este texto aparece en el encabezado de todas las propuestas, independientemente del idioma o tipo.</div>
+      </div>
+
       <div class="lang-tabs">
         <button class="lang-tab active" onclick="setLang('es')" id="lang-es">🇪🇸 Español</button>
         <button class="lang-tab" onclick="setLang('en')" id="lang-en">🇬🇧 English</button>
@@ -496,6 +503,7 @@ function clausulasToFields(c) {
                   'en-fee-validez','en-fee-pago','en-fee-iva','en-fee-gastos',
                   'en-proyecto-validez','en-proyecto-pago','en-proyecto-iva','en-proyecto-gastos'];
   fields.forEach(f => { if ($(f) && c[f]) $(f).value = c[f]; });
+  if ($('conf-disclaimer') && c['confidencial']) $('conf-disclaimer').value = c['confidencial'];
 }
 function clausulasFromFields() {
   const fields = ['es-fee-validez','es-fee-pago','es-fee-iva','es-fee-gastos',
@@ -504,6 +512,7 @@ function clausulasFromFields() {
                   'en-proyecto-validez','en-proyecto-pago','en-proyecto-iva','en-proyecto-gastos'];
   const obj = {};
   fields.forEach(f => { if ($(f)) obj[f] = $(f).value; });
+  if ($('conf-disclaimer')) obj['confidencial'] = $('conf-disclaimer').value;
   return obj;
 }
 
