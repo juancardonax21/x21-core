@@ -34,6 +34,12 @@ html,body{font-family:var(--font-ui);background:var(--black);color:var(--white);
 .pin-key.del{font-size:20px;color:var(--gray4);}
 .pin-key.empty{visibility:hidden;pointer-events:none;}
 .login-error{margin-top:20px;font-size:12px;color:var(--danger);min-height:18px;text-align:center;letter-spacing:0.04em;}
+.login-ok{margin-top:16px;width:220px;height:48px;border-radius:var(--r);border:none;background:#27ae60;color:white;font-family:var(--font-ui);font-size:14px;font-weight:700;letter-spacing:0.06em;cursor:pointer;transition:all var(--transition);display:flex;align-items:center;justify-content:center;gap:8px;}
+.login-ok:hover{background:#219a52;transform:translateY(-1px);}
+.login-ok:active{transform:scale(0.97);}
+.login-ok:disabled{background:var(--gray2);color:var(--gray4);cursor:default;transform:none;}
+.login-spinner{width:15px;height:15px;border:2px solid rgba(255,255,255,0.3);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
 .login-version{position:absolute;bottom:16px;right:16px;font-size:10px;color:var(--gray2);font-family:var(--font-mono);}
 
 #screen-home{flex-direction:column;background:var(--black);min-height:100vh;padding:0;}
@@ -203,6 +209,7 @@ html,body{font-family:var(--font-ui);background:var(--black);color:var(--white);
       <button class="pin-key" onclick="pinKey('0')">0</button>
       <button class="pin-key del" onclick="pinDel()">⌫</button>
     </div>
+    <button class="login-ok" id="loginOkBtn" onclick="doLogin()" disabled>Entrar</button>
     <div class="login-error" id="loginError"></div>
   </div>
   <div class="login-version">v2.0</div>
@@ -354,15 +361,23 @@ function showScreen(id) {
 let pin = "";
 function pinKey(k) {
   if (pin.length >= 4) return;
-  pin += k; updateDots();
-  if (pin.length === 4) setTimeout(doLogin, 120);
+  pin += k; updateDots(); updateOkBtn();
 }
-function pinDel()    { pin = pin.slice(0,-1); updateDots(); clearError(); }
+function pinDel()    { pin = pin.slice(0,-1); updateDots(); clearError(); updateOkBtn(); }
 function updateDots(){ for(let i=0;i<4;i++) $("d"+i).className="pin-dot"+(i<pin.length?" filled":""); }
+function updateOkBtn(){
+  const btn=$("loginOkBtn");
+  if(!btn) return;
+  btn.disabled = pin.length < 4;
+}
 function clearError(){ $("loginError").textContent=""; }
 
 async function doLogin() {
-  // Siempre primero intenta la API si la URL está configurada
+  if (pin.length < 4) return;
+  const btn = $("loginOkBtn");
+  btn.disabled = true;
+  btn.innerHTML = '<div class="login-spinner"></div> Verificando...';
+  clearError();
   try {
     const res = await api({ action: "login", password: pin });
     if (res.ok) {
@@ -371,16 +386,19 @@ async function doLogin() {
       showScreen("screen-home");
     } else {
       showError();
+      btn.innerHTML = "Entrar";
+      btn.disabled = false;
     }
   } catch(e) {
-    // Fallback local si la API falla
     if (pin === LOCAL_PIN) {
       token = "local";
       sessionStorage.setItem("x21_token", token);
       showScreen("screen-home");
     } else {
-      $("loginError").textContent = "Sin conexión — usa el PIN local";
-      pin = ""; updateDots();
+      $("loginError").textContent = "Sin conexión — comprueba la red";
+      pin = ""; updateDots(); updateOkBtn();
+      btn.innerHTML = "Entrar";
+      btn.disabled = true;
     }
   }
 }
@@ -404,6 +422,7 @@ document.addEventListener("keydown", e => {
   if($("screen-login").classList.contains("active")) {
     if(e.key>="0"&&e.key<="9") pinKey(e.key);
     if(e.key==="Backspace") pinDel();
+    if(e.key==="Enter" && pin.length===4) doLogin();
   }
   if(e.key==="Escape"){ closeForm(); closeDetail(); }
 });
