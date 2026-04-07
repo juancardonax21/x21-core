@@ -954,12 +954,17 @@ async function generateDoc() {
   if (!$('send-body').value) $('send-body').value = emailBodyTpl;
 
   try {
+    // Primero guarda el borrador en el Sheet con todos los datos
     await saveDraft();
+    if (!propId) {
+      toast('Error: no se pudo guardar el borrador antes de generar');
+      return;
+    }
+    // Llama al generador — lee los datos directamente del Sheet por propId
     const res = await apiCall({
-      action:    'generarPropuesta',
-      propId:    propId || '',
-      pitchId:   pitchId || '',
-      payload:   JSON.stringify(payload)
+      action:  'generarPropuesta',
+      propId:  propId,
+      pitchId: pitchId || ''
     });
 
     if (!res.ok) throw new Error(res.error || 'Error desconocido');
