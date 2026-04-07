@@ -1,0 +1,1039 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Propuesta — X21 Core</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+:root {
+  --black:#0d0d0d; --white:#f7f5f0;
+  --gray1:#1c1c1c; --gray2:#2e2e2e; --gray3:#555; --gray4:#888; --gray5:#bbb;
+  --accent:#c8860a; --danger:#c0392b; --teal:#1d9e75; --purple:#534ab7;
+  --font-ui:'Syne',sans-serif; --font-display:'DM Serif Display',Georgia,serif;
+  --font-mono:'DM Mono',monospace;
+  --r:10px; --r-lg:16px; --t:0.18s ease;
+  --border:rgba(0,0,0,0.08);
+}
+html,body { font-family:var(--font-ui); background:#f7f5f0; color:var(--black); min-height:100vh; }
+
+/* ── HEADER ── */
+.page-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 32px; background:var(--black); position:sticky; top:0; z-index:100;
+}
+.header-left { display:flex; align-items:center; gap:16px; }
+.back-btn {
+  display:flex; align-items:center; gap:6px; padding:7px 14px;
+  border-radius:100px; border:1px solid rgba(255,255,255,0.12);
+  background:none; color:var(--gray4); cursor:pointer;
+  font-family:var(--font-ui); font-size:12px; font-weight:500;
+  transition:all var(--t); text-decoration:none;
+}
+.back-btn:hover { color:var(--white); border-color:rgba(255,255,255,0.3); }
+.breadcrumb { font-size:13px; font-weight:700; color:var(--white); }
+.breadcrumb span { color:rgba(255,255,255,0.25); margin:0 6px; }
+.header-actions { display:flex; align-items:center; gap:10px; }
+.btn-header {
+  display:flex; align-items:center; gap:7px;
+  padding:8px 16px; border-radius:var(--r); border:1px solid rgba(255,255,255,0.15);
+  background:none; color:var(--gray4); cursor:pointer;
+  font-family:var(--font-ui); font-size:12px; font-weight:600;
+  transition:all var(--t); white-space:nowrap;
+}
+.btn-header:hover { color:var(--white); border-color:rgba(255,255,255,0.3); }
+.btn-header.primary { background:var(--accent); border-color:var(--accent); color:white; }
+.btn-header.primary:hover { background:#a87008; }
+.btn-header.success { background:var(--teal); border-color:var(--teal); color:white; }
+.btn-header.success:hover { background:#158a64; }
+.btn-header:disabled { opacity:0.4; cursor:default; transform:none !important; }
+
+/* ── LAYOUT ── */
+.editor-layout { display:flex; gap:0; min-height:calc(100vh - 57px); }
+
+/* ── SIDEBAR ── */
+.prop-sidebar {
+  width:240px; flex-shrink:0; background:white;
+  border-right:1px solid var(--border);
+  padding:20px 0; position:sticky; top:57px;
+  height:calc(100vh - 57px); overflow-y:auto;
+}
+.sidebar-section { padding:0 12px 12px; }
+.sidebar-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--gray5); padding:0 8px; margin-bottom:6px; }
+.sidebar-item {
+  display:flex; align-items:center; gap:8px; width:100%;
+  padding:8px 12px; border-radius:var(--r); border:none; background:none;
+  cursor:pointer; font-family:var(--font-ui); font-size:13px; font-weight:500;
+  color:var(--gray3); transition:all var(--t); text-align:left;
+}
+.sidebar-item:hover { background:#f7f5f0; color:var(--black); }
+.sidebar-item.active { background:#fdf3d6; color:var(--accent); font-weight:700; }
+.sidebar-item .num {
+  width:20px; height:20px; border-radius:50%;
+  background:rgba(0,0,0,0.06); font-size:10px; font-weight:700;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0; color:var(--gray3);
+}
+.sidebar-item.active .num { background:var(--accent); color:white; }
+.sidebar-item.done .num { background:var(--teal); color:white; }
+.sidebar-divider { height:1px; background:var(--border); margin:8px 20px; }
+
+/* ── MAIN ── */
+.prop-main { flex:1; padding:32px; max-width:760px; }
+
+.section-block { display:none; }
+.section-block.active { display:block; }
+
+.block-title {
+  font-family:var(--font-display); font-size:24px; color:var(--black);
+  margin-bottom:6px; letter-spacing:-0.5px;
+}
+.block-desc { font-size:13px; color:var(--gray3); margin-bottom:24px; line-height:1.55; }
+
+/* ── FIELDS ── */
+.mfield { display:flex; flex-direction:column; gap:5px; margin-bottom:16px; }
+.mfield label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:#888; }
+.mfield input, .mfield textarea, .mfield select {
+  padding:10px 12px; border:1px solid var(--border);
+  border-radius:var(--r); background:white; font-family:var(--font-ui);
+  font-size:14px; color:var(--black); outline:none; transition:border-color var(--t);
+}
+.mfield input:focus, .mfield textarea:focus, .mfield select:focus { border-color:var(--accent); }
+.mfield textarea { resize:vertical; min-height:100px; line-height:1.65; }
+.field-row { display:flex; gap:14px; }
+.field-row .mfield { flex:1; }
+
+/* ── LANG / TIPO TOGGLE ── */
+.toggle-group { display:flex; gap:8px; margin-bottom:20px; }
+.toggle-btn {
+  padding:7px 18px; border-radius:100px; border:1.5px solid var(--border);
+  background:none; cursor:pointer; font-family:var(--font-ui); font-size:12px;
+  font-weight:700; color:var(--gray3); transition:all var(--t);
+}
+.toggle-btn.active-es, .toggle-btn.active-proyecto { background:var(--black); color:white; border-color:var(--black); }
+.toggle-btn.active-en { background:#185fa5; color:white; border-color:#185fa5; }
+.toggle-btn.active-fee { background:var(--teal); color:white; border-color:var(--teal); }
+
+/* ── FASES / PLAN DE TRABAJO ── */
+.fases-container { display:flex; flex-direction:column; gap:16px; margin-bottom:16px; }
+.fase-block {
+  background:white; border:1px solid var(--border); border-radius:var(--r-lg);
+  overflow:hidden;
+}
+.fase-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:12px 16px; background:#fafaf8; border-bottom:1px solid var(--border);
+}
+.fase-header-left { display:flex; align-items:center; gap:10px; }
+.fase-num {
+  width:24px; height:24px; border-radius:50%; background:var(--black);
+  color:white; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center;
+}
+.fase-name-input {
+  border:none; background:transparent; font-family:var(--font-ui);
+  font-size:13px; font-weight:700; color:var(--black); outline:none; width:280px;
+}
+.fase-name-input::placeholder { color:var(--gray5); }
+.btn-del-fase {
+  border:none; background:none; cursor:pointer; color:var(--gray5);
+  font-size:14px; padding:4px; border-radius:5px; transition:all 0.12s;
+}
+.btn-del-fase:hover { background:#fce8e8; color:var(--danger); }
+.fase-body { padding:14px 16px; }
+.fase-table { width:100%; border-collapse:collapse; }
+.fase-table th {
+  padding:6px 10px; font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.08em; color:var(--gray4); background:#f7f5f0;
+  border-bottom:1px solid var(--border); text-align:left;
+}
+.fase-table td { padding:2px 0; vertical-align:top; }
+.fase-cell {
+  width:100%; padding:7px 10px; border:1px solid transparent;
+  border-radius:7px; background:transparent; font-family:var(--font-ui);
+  font-size:13px; color:var(--black); outline:none; resize:none;
+  line-height:1.5; transition:all var(--t); min-height:60px;
+}
+.fase-cell:focus { border-color:var(--accent); background:white; }
+.btn-add-fase {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:8px 16px; border-radius:var(--r);
+  border:1.5px dashed rgba(0,0,0,0.15); background:transparent;
+  cursor:pointer; font-family:var(--font-ui); font-size:12px; font-weight:600;
+  color:var(--gray4); transition:all var(--t);
+}
+.btn-add-fase:hover { border-color:var(--accent); color:var(--accent); background:#fffbf0; }
+
+/* ── EQUIPO ── */
+.equipo-list { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; }
+.equipo-row {
+  display:flex; align-items:center; gap:10px;
+  background:white; border:1px solid var(--border); border-radius:var(--r); padding:10px 14px;
+}
+.equipo-select {
+  flex:1; border:none; background:transparent; font-family:var(--font-ui);
+  font-size:13px; color:var(--black); outline:none; cursor:pointer;
+}
+.equipo-horas {
+  width:80px; padding:6px 10px; border:1px solid var(--border); border-radius:7px;
+  font-family:var(--font-mono); font-size:12px; color:var(--black);
+  outline:none; text-align:right; background:white;
+}
+.equipo-horas:focus { border-color:var(--accent); }
+.equipo-rate { font-family:var(--font-mono); font-size:11px; color:var(--gray4); min-width:60px; text-align:right; }
+.equipo-subtotal { font-family:var(--font-mono); font-size:13px; font-weight:600; min-width:72px; text-align:right; color:var(--black); }
+.btn-del-row {
+  width:26px; height:26px; border-radius:7px; border:none; background:none;
+  cursor:pointer; font-size:13px; color:var(--gray5); transition:all 0.12s;
+  display:flex; align-items:center; justify-content:center; flex-shrink:0;
+}
+.btn-del-row:hover { background:#fce8e8; color:var(--danger); }
+.btn-add-row {
+  display:inline-flex; align-items:center; gap:7px; padding:8px 14px;
+  border-radius:var(--r); border:1.5px dashed rgba(0,0,0,0.15); background:transparent;
+  cursor:pointer; font-family:var(--font-ui); font-size:12px; font-weight:600;
+  color:var(--gray4); transition:all var(--t);
+}
+.btn-add-row:hover { border-color:var(--accent); color:var(--accent); background:#fffbf0; }
+
+/* ── PRESUPUESTO ── */
+.budget-table { width:100%; border-collapse:collapse; background:white; border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden; margin-bottom:16px; }
+.budget-table th { padding:9px 14px; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; color:var(--gray4); background:#fafaf8; border-bottom:1px solid var(--border); text-align:right; }
+.budget-table th:first-child { text-align:left; }
+.budget-table td { padding:10px 14px; border-bottom:1px solid rgba(0,0,0,0.05); font-size:13px; text-align:right; }
+.budget-table td:first-child { text-align:left; color:var(--black); }
+.budget-table tr:last-child td { border-bottom:none; }
+.budget-total { background:#fafaf8; font-weight:700; font-family:var(--font-mono); font-size:15px; }
+.budget-total td { padding:12px 14px; }
+.budget-total td:first-child { color:var(--gray3); font-weight:700; font-size:12px; text-transform:uppercase; letter-spacing:0.08em; }
+.budget-mono { font-family:var(--font-mono); }
+
+.otros-costes { display:flex; flex-direction:column; gap:8px; margin-bottom:16px; }
+.otro-row { display:flex; gap:10px; align-items:center; }
+.otro-concepto { flex:1; padding:8px 12px; border:1px solid var(--border); border-radius:var(--r); font-family:var(--font-ui); font-size:13px; outline:none; }
+.otro-concepto:focus { border-color:var(--accent); }
+.otro-importe { width:110px; padding:8px 12px; border:1px solid var(--border); border-radius:var(--r); font-family:var(--font-mono); font-size:13px; text-align:right; outline:none; }
+.otro-importe:focus { border-color:var(--accent); }
+
+/* ── RESUMEN ── */
+.resumen-card {
+  background:white; border:1px solid var(--border); border-radius:var(--r-lg);
+  padding:24px; margin-bottom:20px;
+}
+.resumen-row { display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:1px solid rgba(0,0,0,0.05); }
+.resumen-row:last-child { border-bottom:none; }
+.resumen-label { font-size:13px; color:var(--gray3); }
+.resumen-val { font-family:var(--font-mono); font-size:14px; font-weight:600; color:var(--black); }
+.resumen-total { background:#0d0d0d; border-radius:var(--r-lg); padding:20px 24px; display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+.resumen-total-label { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:rgba(255,255,255,0.5); }
+.resumen-total-val { font-family:var(--font-mono); font-size:28px; font-weight:700; color:white; }
+
+.clausulas-preview {
+  background:#fdf3d6; border-left:3px solid var(--accent);
+  border-radius:0 var(--r) var(--r) 0; padding:14px 16px;
+  font-size:12px; color:#664d00; line-height:1.7;
+}
+
+.btn-generate {
+  width:100%; padding:14px; border-radius:var(--r-lg); border:none;
+  background:var(--accent); cursor:pointer; font-family:var(--font-ui);
+  font-size:15px; font-weight:700; color:white; transition:all var(--t);
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  margin-bottom:10px;
+}
+.btn-generate:hover { background:#a87008; transform:translateY(-1px); }
+.btn-generate:disabled { background:var(--gray5); cursor:default; transform:none; }
+.btn-send {
+  width:100%; padding:12px; border-radius:var(--r-lg); border:1px solid var(--border);
+  background:none; cursor:pointer; font-family:var(--font-ui);
+  font-size:14px; font-weight:600; color:var(--black); transition:all var(--t);
+  display:flex; align-items:center; justify-content:center; gap:10px;
+}
+.btn-send:hover { background:#f0ece4; }
+.btn-send:disabled { opacity:0.4; cursor:default; }
+.doc-link {
+  display:flex; align-items:center; gap:8px;
+  padding:12px 16px; border-radius:var(--r); background:#e1f5ee;
+  border:1px solid rgba(29,158,117,0.2); margin-bottom:10px;
+  font-size:13px; color:var(--teal); font-weight:600; text-decoration:none;
+}
+.doc-link:hover { background:#cceedd; }
+
+/* ── SEND MODAL ── */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.55); display:flex; align-items:center; justify-content:center; z-index:300; padding:16px; }
+.modal { background:#f7f5f0; border-radius:18px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; box-shadow:0 32px 80px rgba(0,0,0,0.3); animation:mIn 0.2s ease; }
+@keyframes mIn { from{opacity:0;transform:translateY(14px);}to{opacity:1;transform:translateY(0);} }
+.modal-head { display:flex; align-items:center; justify-content:space-between; padding:20px 24px 0; }
+.modal-head-title { font-family:var(--font-display); font-size:20px; color:var(--black); }
+.modal-close { width:30px; height:30px; border-radius:50%; border:1px solid rgba(0,0,0,0.1); background:rgba(0,0,0,0.05); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; color:var(--gray3); }
+.modal-close:hover { background:rgba(0,0,0,0.1); }
+.modal-body { padding:18px 24px 22px; display:flex; flex-direction:column; gap:14px; }
+.modal-footer { display:flex; justify-content:flex-end; gap:10px; }
+.btn-cancel { padding:9px 16px; border-radius:var(--r); border:1px solid rgba(0,0,0,0.12); background:none; cursor:pointer; font-family:var(--font-ui); font-size:13px; color:#888; }
+.btn-cancel:hover { background:rgba(0,0,0,0.05); }
+.btn-ok { padding:9px 20px; border-radius:var(--r); border:none; background:var(--black); cursor:pointer; font-family:var(--font-ui); font-size:13px; font-weight:700; color:white; }
+.btn-ok:hover { background:var(--gray1); }
+.btn-ok:disabled { background:var(--gray5); cursor:default; }
+
+/* ── SPINNER ── */
+.spinner { width:16px; height:16px; border:2px solid rgba(255,255,255,0.3); border-top-color:white; border-radius:50%; animation:spin 0.7s linear infinite; }
+.spinner.dark { border-color:rgba(0,0,0,0.1); border-top-color:var(--accent); }
+@keyframes spin { to{transform:rotate(360deg);} }
+
+::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:rgba(0,0,0,0.12); border-radius:10px; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="header-left">
+    <a class="back-btn" href="pitch.html">← Pipeline</a>
+    <div class="breadcrumb">Pitch <span>/</span> <span id="breadClientName">Nueva propuesta</span></div>
+  </div>
+  <div class="header-actions">
+    <button class="btn-header" onclick="saveDraft()">Guardar borrador</button>
+    <button class="btn-header primary" id="btnGenerate" onclick="generateDoc()">
+      <svg width="13" height="13" viewBox="0 0 13 13" fill="none"><path d="M2 10.5L6.5 2 11 10.5H2Z" stroke="white" stroke-width="1.5" stroke-linejoin="round"/></svg>
+      Generar propuesta
+    </button>
+  </div>
+</header>
+
+<div class="editor-layout">
+
+  <!-- ── SIDEBAR NAV ── -->
+  <nav class="prop-sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Propuesta</div>
+      <button class="sidebar-item active" id="nav-cabecera" onclick="goTo('cabecera')">
+        <span class="num">1</span> Cabecera
+      </button>
+      <button class="sidebar-item" id="nav-objetivo" onclick="goTo('objetivo')">
+        <span class="num">2</span> Objetivo
+      </button>
+      <button class="sidebar-item" id="nav-enfoque" onclick="goTo('enfoque')">
+        <span class="num">3</span> Enfoque
+      </button>
+      <button class="sidebar-item" id="nav-plan" onclick="goTo('plan')">
+        <span class="num">4</span> Plan de trabajo
+      </button>
+      <button class="sidebar-item" id="nav-equipo" onclick="goTo('equipo')">
+        <span class="num">5</span> Equipo
+      </button>
+      <button class="sidebar-item" id="nav-presupuesto" onclick="goTo('presupuesto')">
+        <span class="num">6</span> Presupuesto
+      </button>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <button class="sidebar-item" id="nav-resumen" onclick="goTo('resumen')">
+        <span class="num" style="background:var(--accent);color:white">✦</span> Resumen y envío
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── EDITOR ── -->
+  <main class="prop-main">
+
+    <!-- 1. CABECERA -->
+    <div class="section-block active" id="block-cabecera">
+      <div class="block-title">Cabecera</div>
+      <div class="block-desc">Datos generales de la propuesta. El idioma afecta a todos los textos fijos del documento.</div>
+
+      <div class="toggle-group" id="tipoToggle">
+        <button class="toggle-btn active-proyecto" onclick="setTipo('proyecto')" id="toggleProyecto">Proyecto</button>
+        <button class="toggle-btn" onclick="setTipo('fee')" id="toggleFee">Fee mensual</button>
+      </div>
+      <div class="toggle-group" id="idiomaToggle">
+        <button class="toggle-btn active-es" onclick="setIdioma('es')" id="toggleEs">🇪🇸 Español</button>
+        <button class="toggle-btn" onclick="setIdioma('en')" id="toggleEn">🇬🇧 English</button>
+      </div>
+
+      <div class="mfield">
+        <label id="lbl-cliente">Cliente</label>
+        <input id="p-cliente" placeholder="Nombre del cliente o empresa">
+      </div>
+      <div class="mfield">
+        <label id="lbl-subtitulo">Subtítulo de la propuesta</label>
+        <input id="p-subtitulo" placeholder="ej. Propuesta de apoyo en comunicación y relaciones con medios">
+      </div>
+      <div class="field-row">
+        <div class="mfield">
+          <label id="lbl-fecha">Fecha</label>
+          <input type="date" id="p-fecha">
+        </div>
+        <div class="mfield">
+          <label id="lbl-validez">Válida hasta</label>
+          <input type="date" id="p-validez">
+        </div>
+      </div>
+      <div class="mfield">
+        <label id="lbl-confidencial">Aviso de confidencialidad</label>
+        <textarea id="p-confidencial" style="min-height:70px"></textarea>
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn-add-fase" onclick="goTo('objetivo')">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- 2. OBJETIVO -->
+    <div class="section-block" id="block-objetivo">
+      <div class="block-title" id="lbl-block-objetivo">Objetivo</div>
+      <div class="block-desc" id="lbl-desc-objetivo">Describe el objetivo estratégico de esta propuesta. ¿Qué quiere conseguir el cliente?</div>
+      <div class="mfield">
+        <textarea id="p-objetivo" style="min-height:180px" placeholder="Desarrollar una operación intensiva y estratégica de..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-add-fase" onclick="goTo('cabecera')">← Anterior</button>
+        <button class="btn-add-fase" onclick="goTo('enfoque')">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- 3. ENFOQUE -->
+    <div class="section-block" id="block-enfoque">
+      <div class="block-title" id="lbl-block-enfoque">Enfoque</div>
+      <div class="block-desc" id="lbl-desc-enfoque">Describe el enfoque metodológico y los principios sobre los que se basa la propuesta.</div>
+      <div class="mfield">
+        <textarea id="p-enfoque" style="min-height:180px" placeholder="La propuesta se basa en una estrategia de..."></textarea>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-add-fase" onclick="goTo('objetivo')">← Anterior</button>
+        <button class="btn-add-fase" onclick="goTo('plan')">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- 4. PLAN DE TRABAJO -->
+    <div class="section-block" id="block-plan">
+      <div class="block-title" id="lbl-block-plan">Plan de trabajo</div>
+      <div class="block-desc" id="lbl-desc-plan">Define las fases del proyecto. Cada fase tiene objetivo, acciones y entregables.</div>
+
+      <div class="fases-container" id="fasesContainer"></div>
+      <button class="btn-add-fase" onclick="addFase()">+ Añadir fase</button>
+
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button class="btn-add-fase" onclick="goTo('enfoque')">← Anterior</button>
+        <button class="btn-add-fase" onclick="goTo('equipo')">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- 5. EQUIPO -->
+    <div class="section-block" id="block-equipo">
+      <div class="block-title" id="lbl-block-equipo">Equipo</div>
+      <div class="block-desc" id="lbl-desc-equipo">Perfiles profesionales que participan en el proyecto. Las horas aquí afectan al presupuesto.</div>
+
+      <div class="equipo-list" id="equipoList"></div>
+      <button class="btn-add-row" onclick="addEquipoRow()">+ Añadir perfil</button>
+
+      <div class="mfield" style="margin-top:20px">
+        <label id="lbl-equipo-bio">Descripción del equipo</label>
+        <textarea id="p-equipo-bio" style="min-height:140px" placeholder="Breve descripción de los perfiles involucrados, experiencia relevante..."></textarea>
+      </div>
+
+      <div style="display:flex;gap:10px">
+        <button class="btn-add-fase" onclick="goTo('plan')">← Anterior</button>
+        <button class="btn-add-fase" onclick="goTo('presupuesto')">Siguiente →</button>
+      </div>
+    </div>
+
+    <!-- 6. PRESUPUESTO -->
+    <div class="section-block" id="block-presupuesto">
+      <div class="block-title" id="lbl-block-presupuesto">Presupuesto</div>
+      <div class="block-desc" id="lbl-desc-presupuesto">El presupuesto se calcula automáticamente desde el equipo. Puedes añadir otros costes.</div>
+
+      <table class="budget-table" id="budgetTable">
+        <thead>
+          <tr>
+            <th style="text-align:left" id="lbl-th-concepto">Concepto</th>
+            <th id="lbl-th-horas">Horas</th>
+            <th id="lbl-th-rate">Rate/h</th>
+            <th id="lbl-th-importe">Importe</th>
+          </tr>
+        </thead>
+        <tbody id="budgetTbody"></tbody>
+        <tfoot>
+          <tr class="budget-total" id="budgetOtrosRow" style="display:none">
+            <td id="lbl-otros-costes">Otros costes</td><td></td><td></td>
+            <td class="budget-mono" id="totalOtros">€ 0</td>
+          </tr>
+          <tr class="budget-total">
+            <td id="lbl-total">TOTAL</td><td></td><td></td>
+            <td class="budget-mono" id="grandTotal">€ 0</td>
+          </tr>
+        </tfoot>
+      </table>
+
+      <div class="mfield" style="margin-bottom:10px">
+        <label id="lbl-otros-title">Otros costes (opcional)</label>
+      </div>
+      <div class="otros-costes" id="otrosList"></div>
+      <button class="btn-add-row" onclick="addOtro()">+ Añadir coste</button>
+
+      <div style="display:flex;gap:10px;margin-top:20px">
+        <button class="btn-add-fase" onclick="goTo('equipo')">← Anterior</button>
+        <button class="btn-add-fase" onclick="goTo('resumen')">Ver resumen →</button>
+      </div>
+    </div>
+
+    <!-- RESUMEN Y ENVÍO -->
+    <div class="section-block" id="block-resumen">
+      <div class="block-title">Resumen y envío</div>
+      <div class="block-desc">Revisa el resumen antes de generar el documento Google Doc y enviarlo al cliente.</div>
+
+      <div class="resumen-card" id="resumenCard"></div>
+
+      <div class="resumen-total">
+        <div class="resumen-total-label" id="lbl-importe-total">Importe total</div>
+        <div class="resumen-total-val" id="resumenTotal">€ 0</div>
+      </div>
+
+      <div class="mfield">
+        <label>Cláusulas aplicadas</label>
+        <div class="clausulas-preview" id="clausulasPreview">Cargando cláusulas...</div>
+      </div>
+
+      <div id="docActions" style="margin-top:20px">
+        <div id="docLinkArea"></div>
+        <button class="btn-generate" id="btnGenerateDoc" onclick="generateDoc()">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="10" height="13" rx="1.5" stroke="white" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h3" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg>
+          Generar Google Doc
+        </button>
+        <button class="btn-send" id="btnSend" onclick="openSendModal()" disabled>
+          <svg width="15" height="15" viewBox="0 0 16 16" fill="none"><path d="M14 2L7 9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M14 2L9.5 14 7 9 2 6.5 14 2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>
+          Enviar al cliente por email
+        </button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<!-- ── SEND MODAL ── -->
+<div class="modal-overlay" id="sendModal" style="display:none" onclick="if(event.target===this)closeSendModal()">
+  <div class="modal">
+    <div class="modal-head">
+      <div class="modal-head-title">Enviar propuesta</div>
+      <button class="modal-close" onclick="closeSendModal()">×</button>
+    </div>
+    <div class="modal-body">
+      <div class="mfield">
+        <label>Para</label>
+        <input id="send-to" type="email" placeholder="email@cliente.com">
+      </div>
+      <div class="mfield">
+        <label>Asunto</label>
+        <input id="send-subject" placeholder="Propuesta de servicios — X21">
+      </div>
+      <div class="mfield">
+        <label>Mensaje</label>
+        <textarea id="send-body" style="min-height:140px"></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn-cancel" onclick="closeSendModal()">Cancelar</button>
+        <button class="btn-ok" id="btnSendOk" onclick="sendEmail()">Enviar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="shared/x21-core.js"></script>
+<script>
+requireAuth();
+
+const $ = id => document.getElementById(id);
+
+// ── ESTADO ───────────────────────────────────────────────
+let pitchId   = sessionStorage.getItem('x21_pitch_id') || null;
+let pitchData = null;   // datos de la oportunidad
+let cfg       = { perfiles:[], servicios:[], clausulas:{}, empresa:{} };
+let propId    = null;   // ID si ya está guardada como borrador
+let docUrl    = null;   // URL del Google Doc generado
+
+let idioma = 'es';
+let tipo   = 'proyecto';
+let fases  = [];
+let equipo = [];
+let otros  = [];
+
+// ── TRADUCCIONES ─────────────────────────────────────────
+const T = {
+  es: {
+    cliente:'Cliente', subtitulo:'Subtítulo de la propuesta', fecha:'Fecha',
+    validez:'Válida hasta', confidencial:'Aviso de confidencialidad',
+    blockObjetivo:'Objetivo', descObjetivo:'Describe el objetivo estratégico de esta propuesta.',
+    blockEnfoque:'Enfoque', descEnfoque:'Describe el enfoque metodológico.',
+    blockPlan:'Plan de trabajo', descPlan:'Define las fases del proyecto.',
+    blockEquipo:'Equipo', descEquipo:'Perfiles profesionales que participan en el proyecto.',
+    blockPresupuesto:'Presupuesto', descPresupuesto:'Calculado automáticamente desde el equipo.',
+    equipoBio:'Descripción del equipo',
+    thConcepto:'Concepto', thHoras:'Horas', thRate:'Rate/h', thImporte:'Importe',
+    otrosCostesTitle:'Otros costes (opcional)', otrosCostesRow:'Otros costes',
+    total:'TOTAL', importeTotal:'Importe total',
+    fasePh: (n) => `Fase ${n}`,
+    faseCols: ['Objetivo', 'Acciones', 'Entregables'],
+    confidencialDefault: (c) => `Esta propuesta ha sido preparada por X21 para uso exclusivo de ${c}. Su contenido es estrictamente confidencial y no podrá ser compartido, divulgado ni citado sin el consentimiento previo y por escrito de las partes.`,
+    emailSubject: (c) => `Propuesta de servicios — X21 para ${c}`,
+    emailBody: (c, url) => `Estimado equipo de ${c},\n\nAdjunto encontrarán nuestra propuesta de servicios.\n\nPueden acceder al documento completo en el siguiente enlace:\n${url}\n\nQuedo a su disposición para cualquier consulta.\n\nUn cordial saludo,`
+  },
+  en: {
+    cliente:'Client', subtitulo:'Proposal subtitle', fecha:'Date',
+    validez:'Valid until', confidencial:'Confidentiality notice',
+    blockObjetivo:'Objective', descObjetivo:'Describe the strategic objective of this proposal.',
+    blockEnfoque:'Approach', descEnfoque:'Describe the methodological approach.',
+    blockPlan:'Work plan', descPlan:'Define the project phases.',
+    blockEquipo:'Team', descEquipo:'Professional profiles involved in the project.',
+    blockPresupuesto:'Budget', descPresupuesto:'Automatically calculated from the team.',
+    equipoBio:'Team description',
+    thConcepto:'Service', thHoras:'Hours', thRate:'Rate/h', thImporte:'Amount',
+    otrosCostesTitle:'Other costs (optional)', otrosCostesRow:'Other costs',
+    total:'TOTAL', importeTotal:'Total amount',
+    fasePh: (n) => `Phase ${n}`,
+    faseCols: ['Objective', 'Actions', 'Deliverables'],
+    confidencialDefault: (c) => `This proposal has been prepared by X21 for the exclusive use of ${c}. Its content is strictly confidential and may not be shared, disclosed or cited without the prior written consent of the parties.`,
+    emailSubject: (c) => `Service Proposal — X21 for ${c}`,
+    emailBody: (c, url) => `Dear ${c} team,\n\nPlease find our service proposal attached.\n\nYou can access the full document at the following link:\n${url}\n\nPlease do not hesitate to contact us with any questions.\n\nKind regards,`
+  }
+};
+
+function t(key, ...args) {
+  const fn = T[idioma][key];
+  return typeof fn === 'function' ? fn(...args) : (fn || key);
+}
+
+// ── CARGA ────────────────────────────────────────────────
+async function load() {
+  try {
+    // Carga configuración
+    if (!isLocalSession()) {
+      const cfgRes = await apiCall({ action:'getConfig' });
+      if (cfgRes.ok) cfg = cfgRes.data;
+    } else {
+      const saved = localStorage.getItem('x21_config');
+      if (saved) cfg = JSON.parse(saved);
+    }
+
+    // Carga datos de la oportunidad si viene del pipeline
+    if (pitchId && !isLocalSession()) {
+      const res = await apiCall({ action:'getPitch' });
+      if (res.ok) {
+        pitchData = res.oportunidades.find(o => o.id === pitchId);
+        if (pitchData) prefillFromPitch();
+      }
+    }
+  } catch(e) { console.error(e); }
+
+  // Fecha por defecto
+  if (!$('p-fecha').value) {
+    const today = new Date().toISOString().split('T')[0];
+    $('p-fecha').value = today;
+    const valid = new Date(); valid.setDate(valid.getDate() + 30);
+    $('p-validez').value = valid.toISOString().split('T')[0];
+  }
+
+  // Fases por defecto (vacías)
+  if (fases.length === 0) addFase();
+
+  renderAll();
+  updateLabels();
+}
+
+function prefillFromPitch() {
+  if (!pitchData) return;
+  $('p-cliente').value = pitchData.cliente || '';
+  $('breadClientName').textContent = pitchData.cliente || 'Nueva propuesta';
+  idioma = pitchData.idioma || 'es';
+  tipo   = pitchData.tipo   || 'proyecto';
+  if (pitchData.email) $('send-to').value = pitchData.email;
+  updateToggleButtons();
+}
+
+// ── NAVIGATION ───────────────────────────────────────────
+const SECTIONS = ['cabecera','objetivo','enfoque','plan','equipo','presupuesto','resumen'];
+let currentSection = 'cabecera';
+
+function goTo(name) {
+  document.querySelectorAll('.section-block').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(b => b.classList.remove('active'));
+  $('block-' + name).classList.add('active');
+  $('nav-' + name)?.classList.add('active');
+  currentSection = name;
+  if (name === 'presupuesto') renderBudget();
+  if (name === 'resumen')     renderResumen();
+  window.scrollTo(0, 0);
+}
+
+// ── IDIOMA / TIPO ─────────────────────────────────────────
+function setIdioma(lang) {
+  idioma = lang;
+  updateToggleButtons();
+  updateLabels();
+  updateClausulasPreview();
+  // update confidencial default if empty
+  const cli = $('p-cliente').value || '';
+  if (!$('p-confidencial').value) $('p-confidencial').value = t('confidencialDefault', cli);
+}
+
+function setTipo(t_) {
+  tipo = t_;
+  updateToggleButtons();
+  updateClausulasPreview();
+}
+
+function updateToggleButtons() {
+  $('toggleProyecto').className = 'toggle-btn' + (tipo === 'proyecto' ? ' active-proyecto' : '');
+  $('toggleFee').className      = 'toggle-btn' + (tipo === 'fee'      ? ' active-fee'      : '');
+  $('toggleEs').className       = 'toggle-btn' + (idioma === 'es'     ? ' active-es'        : '');
+  $('toggleEn').className       = 'toggle-btn' + (idioma === 'en'     ? ' active-en'        : '');
+}
+
+function updateLabels() {
+  const labels = {
+    'lbl-cliente':         t('cliente'),
+    'lbl-subtitulo':       t('subtitulo'),
+    'lbl-fecha':           t('fecha'),
+    'lbl-validez':         t('validez'),
+    'lbl-confidencial':    t('confidencial'),
+    'lbl-block-objetivo':  t('blockObjetivo'),
+    'lbl-desc-objetivo':   t('descObjetivo'),
+    'lbl-block-enfoque':   t('blockEnfoque'),
+    'lbl-desc-enfoque':    t('descEnfoque'),
+    'lbl-block-plan':      t('blockPlan'),
+    'lbl-desc-plan':       t('descPlan'),
+    'lbl-block-equipo':    t('blockEquipo'),
+    'lbl-desc-equipo':     t('descEquipo'),
+    'lbl-equipo-bio':      t('equipoBio'),
+    'lbl-block-presupuesto': t('blockPresupuesto'),
+    'lbl-desc-presupuesto':  t('descPresupuesto'),
+    'lbl-th-concepto':     t('thConcepto'),
+    'lbl-th-horas':        t('thHoras'),
+    'lbl-th-rate':         t('thRate'),
+    'lbl-th-importe':      t('thImporte'),
+    'lbl-otros-title':     t('otrosCostesTitle'),
+    'lbl-otros-costes':    t('otrosCostesRow'),
+    'lbl-total':           t('total'),
+    'lbl-importe-total':   t('importeTotal'),
+  };
+  for (const [id, txt] of Object.entries(labels)) {
+    if ($(id)) $(id).textContent = txt;
+  }
+  renderFases();
+}
+
+// ── FASES ─────────────────────────────────────────────────
+function addFase(nombre='', objetivo='', acciones='', entregables='') {
+  fases.push({ nombre, objetivo, acciones, entregables });
+  renderFases();
+}
+
+function delFase(i) {
+  fases.splice(i, 1);
+  renderFases();
+}
+
+function renderFases() {
+  const cols = T[idioma].faseCols;
+  $('fasesContainer').innerHTML = fases.map((f, i) => `
+    <div class="fase-block">
+      <div class="fase-header">
+        <div class="fase-header-left">
+          <div class="fase-num">${i+1}</div>
+          <input class="fase-name-input" value="${esc(f.nombre)}"
+            placeholder="${t('fasePh', i+1)}"
+            oninput="fases[${i}].nombre=this.value">
+        </div>
+        ${fases.length > 1 ? `<button class="btn-del-fase" onclick="delFase(${i})">✕</button>` : ''}
+      </div>
+      <div class="fase-body">
+        <table class="fase-table">
+          <thead><tr>
+            <th style="width:28%">${cols[0]}</th>
+            <th style="width:42%">${cols[1]}</th>
+            <th style="width:30%">${cols[2]}</th>
+          </tr></thead>
+          <tbody><tr>
+            <td><textarea class="fase-cell" oninput="fases[${i}].objetivo=this.value"
+              placeholder="¿Qué se persigue?">${esc(f.objetivo)}</textarea></td>
+            <td><textarea class="fase-cell" oninput="fases[${i}].acciones=this.value"
+              placeholder="Acciones concretas...">${esc(f.acciones)}</textarea></td>
+            <td><textarea class="fase-cell" oninput="fases[${i}].entregables=this.value"
+              placeholder="Documentos, artefactos...">${esc(f.entregables)}</textarea></td>
+          </tr></tbody>
+        </table>
+      </div>
+    </div>`).join('');
+}
+
+// ── EQUIPO ────────────────────────────────────────────────
+function addEquipoRow(perfil='', horas='') {
+  equipo.push({ perfil, horas });
+  renderEquipo();
+}
+
+function delEquipoRow(i) {
+  equipo.splice(i, 1);
+  renderEquipo();
+  renderBudget();
+}
+
+function renderEquipo() {
+  const perfiles = cfg.perfiles || [];
+  const opts = perfiles.map(p =>
+    `<option value="${esc(p.perfil)}" ${p.perfil === equipo[0]?.perfil ? '' : ''}>${esc(p.perfil)} — €${p.rate_hora}/h</option>`
+  ).join('');
+
+  $('equipoList').innerHTML = equipo.map((e, i) => {
+    const pData = perfiles.find(p => p.perfil === e.perfil);
+    const rate  = pData ? parseFloat(pData.rate_hora) || 0 : 0;
+    const sub   = rate && e.horas ? rate * parseFloat(e.horas) : 0;
+    return `<div class="equipo-row">
+      <select class="equipo-select" onchange="equipo[${i}].perfil=this.value;renderEquipo();renderBudget()">
+        <option value="">— Selecciona perfil —</option>
+        ${perfiles.map(p => `<option value="${esc(p.perfil)}" ${p.perfil===e.perfil?'selected':''}>${esc(p.perfil)}</option>`).join('')}
+      </select>
+      <input type="number" class="equipo-horas" value="${e.horas||''}" min="0"
+        placeholder="h" oninput="equipo[${i}].horas=this.value;renderBudget()"
+        title="Horas estimadas">
+      <span class="equipo-rate">${rate ? '€'+rate+'/h' : ''}</span>
+      <span class="equipo-subtotal">${sub ? '€'+sub.toLocaleString('es-ES') : '—'}</span>
+      <button class="btn-del-row" onclick="delEquipoRow(${i})">✕</button>
+    </div>`;
+  }).join('');
+}
+
+// ── OTROS COSTES ──────────────────────────────────────────
+function addOtro() {
+  otros.push({ concepto:'', importe:'' });
+  renderOtros();
+}
+
+function renderOtros() {
+  $('otrosList').innerHTML = otros.map((o, i) => `
+    <div class="otro-row">
+      <input class="otro-concepto" value="${esc(o.concepto)}" placeholder="Concepto"
+        oninput="otros[${i}].concepto=this.value">
+      <input type="number" class="otro-importe" value="${o.importe||''}" placeholder="0"
+        oninput="otros[${i}].importe=this.value;renderBudget()">
+      <button class="btn-del-row" onclick="otros.splice(${i},1);renderOtros();renderBudget()">✕</button>
+    </div>`).join('');
+}
+
+// ── PRESUPUESTO ───────────────────────────────────────────
+function calcTotals() {
+  const perfiles = cfg.perfiles || [];
+  let totalEquipo = 0;
+  const rows = equipo.filter(e => e.perfil && e.horas).map(e => {
+    const pData = perfiles.find(p => p.perfil === e.perfil);
+    const rate  = pData ? parseFloat(pData.rate_hora) || 0 : 0;
+    const sub   = rate * parseFloat(e.horas);
+    totalEquipo += sub;
+    return { perfil: e.perfil, horas: e.horas, rate, sub };
+  });
+  const totalOtros = otros.reduce((s,o) => s + (parseFloat(o.importe)||0), 0);
+  const grand = totalEquipo + totalOtros;
+  return { rows, totalEquipo, totalOtros, grand };
+}
+
+function renderBudget() {
+  const { rows, totalEquipo, totalOtros, grand } = calcTotals();
+  $('budgetTbody').innerHTML = rows.length
+    ? rows.map(r => `<tr>
+        <td>${esc(r.perfil)}</td>
+        <td class="budget-mono">${r.horas}h</td>
+        <td class="budget-mono">€${r.rate}</td>
+        <td class="budget-mono">€${r.sub.toLocaleString('es-ES')}</td>
+      </tr>`).join('')
+    : `<tr><td colspan="4" style="text-align:center;color:var(--gray5);padding:20px">Sin perfiles añadidos</td></tr>`;
+
+  const hasOtros = totalOtros > 0;
+  $('budgetOtrosRow').style.display = hasOtros ? 'table-row' : 'none';
+  $('totalOtros').textContent = '€' + totalOtros.toLocaleString('es-ES');
+  $('grandTotal').textContent = '€' + grand.toLocaleString('es-ES');
+  renderOtros();
+}
+
+// ── CLÁUSULAS ─────────────────────────────────────────────
+function getClausulas() {
+  const c = cfg.clausulas || {};
+  const key = `${idioma}-${tipo}`;
+  return [
+    c[`${key}-validez`]  || '',
+    c[`${key}-pago`]     || '',
+    c[`${key}-iva`]      || '',
+    c[`${key}-gastos`]   || ''
+  ].filter(Boolean).join('\n\n');
+}
+
+function updateClausulasPreview() {
+  const cl = getClausulas();
+  $('clausulasPreview').textContent = cl || 'Sin cláusulas configuradas. Ve a Configuración → Cláusulas legales.';
+}
+
+// ── RESUMEN ───────────────────────────────────────────────
+function renderResumen() {
+  const { grand } = calcTotals();
+  const cli = $('p-cliente').value || '—';
+  const sub = $('p-subtitulo').value || '—';
+  const fecha = $('p-fecha').value ? fmtDate($('p-fecha').value + 'T12:00:00Z') : '—';
+
+  $('resumenCard').innerHTML = `
+    <div class="resumen-row"><span class="resumen-label">Cliente</span><span class="resumen-val">${esc(cli)}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Proyecto</span><span class="resumen-val">${esc(sub)}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Tipo</span><span class="resumen-val">${tipo === 'fee' ? 'Fee mensual' : 'Proyecto'}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Idioma</span><span class="resumen-val">${idioma === 'en' ? '🇬🇧 English' : '🇪🇸 Español'}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Fecha</span><span class="resumen-val">${fecha}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Fases</span><span class="resumen-val">${fases.length}</span></div>
+    <div class="resumen-row"><span class="resumen-label">Perfiles</span><span class="resumen-val">${equipo.filter(e=>e.perfil).length}</span></div>`;
+
+  $('resumenTotal').textContent = '€' + grand.toLocaleString('es-ES');
+  updateClausulasPreview();
+  if (docUrl) {
+    $('docLinkArea').innerHTML = `<a class="doc-link" href="${docUrl}" target="_blank">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="10" height="13" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Ver Google Doc generado →</a>`;
+    $('btnSend').disabled = false;
+  }
+}
+
+// ── SAVE DRAFT ────────────────────────────────────────────
+async function saveDraft() {
+  const payload = buildPayload();
+  try {
+    if (isLocalSession()) {
+      localStorage.setItem('x21_propuesta_draft', JSON.stringify(payload));
+    } else {
+      if (propId) {
+        await apiCall({ action:'updatePropuesta', id:propId, datos_json: JSON.stringify(payload),
+          cliente: payload.cliente, titulo: payload.subtitulo, tipo, idioma,
+          importe: calcTotals().grand });
+      } else {
+        const res = await apiCall({ action:'addPropuesta',
+          pitch_id: pitchId||'', cliente: payload.cliente, titulo: payload.subtitulo,
+          tipo, idioma, importe: calcTotals().grand, estado:'borrador',
+          datos_json: JSON.stringify(payload) });
+        if (res.ok) propId = res.id;
+      }
+    }
+    toast('Borrador guardado');
+  } catch(e) { toast('Error al guardar'); }
+}
+
+function buildPayload() {
+  return {
+    cliente:       $('p-cliente').value,
+    subtitulo:     $('p-subtitulo').value,
+    fecha:         $('p-fecha').value,
+    validez:       $('p-validez').value,
+    confidencial:  $('p-confidencial').value,
+    objetivo:      $('p-objetivo').value,
+    enfoque:       $('p-enfoque').value,
+    fases,
+    equipo,
+    equipo_bio:    $('p-equipo-bio').value,
+    otros,
+    tipo, idioma,
+    clausulas:     getClausulas(),
+    empresa:       cfg.empresa || {},
+    totales:       calcTotals()
+  };
+}
+
+// ── GENERATE DOC ─────────────────────────────────────────
+async function generateDoc() {
+  const cliente = $('p-cliente').value.trim();
+  if (!cliente) { toast('Añade el nombre del cliente antes de generar'); goTo('cabecera'); return; }
+
+  const btn = $('btnGenerateDoc');
+  btn.innerHTML = '<div class="spinner"></div> Generando...';
+  btn.disabled = true;
+
+  const payload = buildPayload();
+
+  // Prepara email
+  const emailSubject = t('emailSubject', cliente);
+  const emailBodyTpl = t('emailBody', cliente, '[URL]');
+  $('send-subject').value = emailSubject;
+  if (!$('send-body').value) $('send-body').value = emailBodyTpl;
+
+  try {
+    await saveDraft();
+    const res = await apiCall({
+      action:    'generarPropuesta',
+      propId:    propId || '',
+      pitchId:   pitchId || '',
+      payload:   JSON.stringify(payload)
+    });
+
+    if (!res.ok) throw new Error(res.error || 'Error desconocido');
+
+    docUrl = res.docUrl;
+    if (propId) {
+      await apiCall({ action:'updatePropuesta', id:propId, estado:'generada', doc_url:docUrl });
+    }
+    $('docLinkArea').innerHTML = `<a class="doc-link" href="${docUrl}" target="_blank">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="10" height="13" rx="1.5" stroke="currentColor" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h3" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/></svg>
+      Ver propuesta en Google Docs →</a>`;
+    $('btnSend').disabled = false;
+    // Actualiza email body con URL real
+    $('send-body').value = t('emailBody', cliente, docUrl);
+    toast('✓ Propuesta generada en Google Drive');
+  } catch(e) {
+    toast('Error al generar: ' + e.message);
+  } finally {
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="2" y="1" width="10" height="13" rx="1.5" stroke="white" stroke-width="1.5"/><path d="M5 5h6M5 8h6M5 11h3" stroke="white" stroke-width="1.2" stroke-linecap="round"/></svg> Regenerar Google Doc';
+    btn.disabled = false;
+  }
+}
+
+// ── SEND EMAIL ────────────────────────────────────────────
+function openSendModal() {
+  const cli = $('p-cliente').value;
+  if (!$('send-to').value && pitchData?.email) $('send-to').value = pitchData.email;
+  $('sendModal').style.display = 'flex';
+}
+function closeSendModal() { $('sendModal').style.display = 'none'; }
+
+async function sendEmail() {
+  const to      = $('send-to').value.trim();
+  const subject = $('send-subject').value.trim();
+  const body    = $('send-body').value.trim();
+  if (!to || !subject) { toast('Completa destinatario y asunto'); return; }
+
+  $('btnSendOk').textContent = 'Enviando...';
+  $('btnSendOk').disabled = true;
+  try {
+    const res = await apiCall({ action:'enviarEmail', to, subject, body, docUrl: docUrl||'' });
+    if (!res.ok) throw new Error(res.error);
+    if (propId) await apiCall({ action:'updatePropuesta', id:propId, estado:'enviada', fecha_envio: new Date().toISOString() });
+    closeSendModal();
+    toast('✓ Propuesta enviada a ' + to);
+  } catch(e) {
+    toast('Error al enviar: ' + e.message);
+  } finally {
+    $('btnSendOk').textContent = 'Enviar';
+    $('btnSendOk').disabled = false;
+  }
+}
+
+// ── RENDER ALL ───────────────────────────────────────────
+function renderAll() {
+  renderFases();
+  renderEquipo();
+  renderBudget();
+}
+
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeSendModal();
+});
+
+// Actualiza confidencial al cambiar cliente
+$('p-cliente').addEventListener('input', e => {
+  $('breadClientName').textContent = e.target.value || 'Nueva propuesta';
+});
+
+load();
+</script>
+</body>
+</html>
