@@ -412,7 +412,9 @@ function showError() {
 function logout() {
   token=null; pin="";
   sessionStorage.removeItem("x21_token");
-  updateDots(); clearError();
+  updateDots(); clearError(); updateOkBtn();
+  const btn=$("loginOkBtn");
+  if(btn){ btn.innerHTML="Entrar"; btn.disabled=true; }
   showScreen("screen-login");
 }
 
