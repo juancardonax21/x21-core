@@ -1,0 +1,574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Listas — X21 Core</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --black:#0d0d0d; --white:#f7f5f0;
+  --gray1:#1c1c1c; --gray2:#2e2e2e; --gray3:#555; --gray4:#888; --gray5:#bbb;
+  --accent:#c8860a; --danger:#c0392b; --teal:#1d9e75; --purple:#534ab7;
+  --font-ui:'Syne',sans-serif; --font-display:'DM Serif Display',Georgia,serif;
+  --font-mono:'DM Mono',monospace;
+  --r:10px; --r-lg:16px; --t:0.18s ease;
+  --bg:#f7f5f0; --surface:white; --border:rgba(0,0,0,0.08);
+}
+html,body { font-family:var(--font-ui); background:var(--bg); color:var(--black); min-height:100vh; }
+
+/* ── HEADER ── */
+.page-header {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:16px 32px; background:var(--black); position:sticky; top:0; z-index:100;
+}
+.header-left { display:flex; align-items:center; gap:16px; }
+.back-btn {
+  display:flex; align-items:center; gap:6px; padding:7px 14px;
+  border-radius:100px; border:1px solid rgba(255,255,255,0.12);
+  background:none; color:var(--gray4); cursor:pointer;
+  font-family:var(--font-ui); font-size:12px; font-weight:500;
+  transition:all var(--t); text-decoration:none;
+}
+.back-btn:hover { color:var(--white); border-color:rgba(255,255,255,0.3); }
+.breadcrumb { font-size:13px; font-weight:700; color:var(--white); }
+.breadcrumb span { color:rgba(255,255,255,0.25); margin:0 6px; }
+.header-right { display:flex; align-items:center; gap:10px; }
+.sync-status { font-size:11px; color:rgba(255,255,255,0.35); font-family:var(--font-mono); }
+.sync-status.saved { color:var(--teal); }
+.sync-status.saving { color:var(--accent); }
+
+/* ── LAYOUT ── */
+.page-body { display:flex; min-height:calc(100vh - 57px); }
+
+/* ── SIDEBAR TABS ── */
+.sidebar {
+  width:220px; flex-shrink:0; background:white;
+  border-right:1px solid var(--border); padding:20px 0;
+  position:sticky; top:57px; height:calc(100vh - 57px); overflow-y:auto;
+}
+.sidebar-section { padding:0 12px 8px; }
+.sidebar-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--gray5); padding:0 8px; margin-bottom:6px; }
+.sidebar-btn {
+  display:flex; align-items:center; gap:10px; width:100%;
+  padding:9px 12px; border-radius:var(--r); border:none; background:none;
+  cursor:pointer; font-family:var(--font-ui); font-size:13px; font-weight:500;
+  color:var(--gray3); transition:all var(--t); text-align:left;
+}
+.sidebar-btn:hover { background:var(--bg); color:var(--black); }
+.sidebar-btn.active { background:#fdf3d6; color:var(--accent); font-weight:700; }
+.sidebar-btn .icon { font-size:15px; width:20px; text-align:center; }
+.sidebar-divider { height:1px; background:var(--border); margin:12px 20px; }
+
+/* ── MAIN CONTENT ── */
+.main { flex:1; padding:32px; max-width:800px; }
+
+.section-panel { display:none; }
+.section-panel.active { display:block; }
+
+.section-title {
+  font-family:var(--font-display); font-size:26px; color:var(--black);
+  margin-bottom:6px; letter-spacing:-0.5px;
+}
+.section-desc { font-size:13px; color:var(--gray3); margin-bottom:28px; line-height:1.55; }
+
+/* ── TABLE ── */
+.list-table {
+  width:100%; border-collapse:collapse; background:white;
+  border:1px solid var(--border); border-radius:var(--r-lg); overflow:hidden;
+  margin-bottom:16px;
+}
+.list-table th {
+  padding:10px 14px; font-size:11px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.08em; color:var(--gray4); background:#fafaf8;
+  border-bottom:1px solid var(--border); text-align:left;
+}
+.list-table td {
+  padding:0; border-bottom:1px solid rgba(0,0,0,0.05); vertical-align:middle;
+}
+.list-table tr:last-child td { border-bottom:none; }
+.list-table tr:hover td { background:#fafaf8; }
+
+.cell-input {
+  width:100%; padding:10px 14px; border:none; background:transparent;
+  font-family:var(--font-ui); font-size:13px; color:var(--black);
+  outline:none; transition:background var(--t);
+}
+.cell-input:focus { background:#fffbf0; }
+.cell-select {
+  width:100%; padding:10px 14px; border:none; background:transparent;
+  font-family:var(--font-ui); font-size:13px; color:var(--black);
+  outline:none; cursor:pointer; appearance:none;
+  -webkit-appearance:none;
+}
+.cell-mono { font-family:var(--font-mono); font-size:12px; }
+
+.td-actions { width:48px; text-align:center; }
+.del-row {
+  width:28px; height:28px; border-radius:7px; border:none; background:none;
+  cursor:pointer; font-size:14px; color:var(--gray5); transition:all 0.12s;
+  display:inline-flex; align-items:center; justify-content:center;
+}
+.del-row:hover { background:#fce8e8; color:var(--danger); }
+
+.btn-add-row {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:8px 16px; border-radius:var(--r);
+  border:1.5px dashed rgba(0,0,0,0.15); background:transparent;
+  cursor:pointer; font-family:var(--font-ui); font-size:12px; font-weight:600;
+  color:var(--gray4); transition:all var(--t);
+}
+.btn-add-row:hover { border-color:var(--accent); color:var(--accent); background:#fffbf0; }
+
+/* ── TEXTAREA FIELDS ── */
+.text-field {
+  width:100%; padding:12px 14px; border:1px solid var(--border);
+  border-radius:var(--r); background:white; font-family:var(--font-ui);
+  font-size:13px; color:var(--black); outline:none; resize:vertical;
+  min-height:100px; line-height:1.6; transition:border-color var(--t);
+}
+.text-field:focus { border-color:var(--accent); }
+
+/* ── FORM FIELDS ── */
+.field-group { margin-bottom:20px; }
+.field-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--gray4); margin-bottom:6px; display:block; }
+.field-input {
+  width:100%; padding:10px 12px; border:1px solid var(--border);
+  border-radius:var(--r); background:white; font-family:var(--font-ui);
+  font-size:13px; color:var(--black); outline:none; transition:border-color var(--t);
+}
+.field-input:focus { border-color:var(--accent); }
+
+/* ── LANG TABS ── */
+.lang-tabs { display:flex; gap:6px; margin-bottom:20px; }
+.lang-tab {
+  padding:6px 16px; border-radius:100px; border:1px solid var(--border);
+  background:none; cursor:pointer; font-family:var(--font-ui); font-size:12px;
+  font-weight:600; color:var(--gray3); transition:all var(--t);
+}
+.lang-tab.active { background:var(--black); color:var(--white); border-color:var(--black); }
+
+/* ── SAVE BUTTON ── */
+.btn-save {
+  display:inline-flex; align-items:center; gap:7px;
+  padding:10px 22px; border-radius:var(--r); border:none;
+  background:var(--black); cursor:pointer; font-family:var(--font-ui);
+  font-size:13px; font-weight:700; color:var(--white); transition:all var(--t);
+}
+.btn-save:hover { background:var(--gray1); transform:translateY(-1px); }
+.btn-save:disabled { background:var(--gray5); cursor:default; transform:none; }
+
+/* ── BADGE ── */
+.badge {
+  display:inline-block; font-size:10px; font-weight:700; text-transform:uppercase;
+  letter-spacing:0.08em; padding:2px 8px; border-radius:100px;
+}
+.badge-fee     { background:#e1f5ee; color:var(--teal); }
+.badge-proyecto { background:#eeedfe; color:var(--purple); }
+
+/* ── SPINNER ── */
+.spinner { width:16px; height:16px; border:2px solid rgba(0,0,0,0.1); border-top-color:var(--accent); border-radius:50%; animation:spin 0.7s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.loading-overlay { display:flex; align-items:center; justify-content:center; padding:48px; gap:12px; color:var(--gray4); font-size:13px; }
+
+::-webkit-scrollbar { width:5px; } ::-webkit-scrollbar-track { background:transparent; } ::-webkit-scrollbar-thumb { background:rgba(0,0,0,0.12); border-radius:10px; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="header-left">
+    <a class="back-btn" href="index.html">← Volver</a>
+    <div class="breadcrumb">X21 Core <span>/</span> Listas</div>
+  </div>
+  <div class="header-right">
+    <span class="sync-status" id="syncStatus">—</span>
+  </div>
+</header>
+
+<div class="page-body">
+
+  <!-- ── SIDEBAR ── -->
+  <nav class="sidebar">
+    <div class="sidebar-section">
+      <div class="sidebar-label">Pitch</div>
+      <button class="sidebar-btn active" onclick="showPanel('perfiles')" id="tab-perfiles">
+        <span class="icon">◈</span> Perfiles y rates
+      </button>
+      <button class="sidebar-btn" onclick="showPanel('servicios')" id="tab-servicios">
+        <span class="icon">◎</span> Tipos de servicio
+      </button>
+      <button class="sidebar-btn" onclick="showPanel('clausulas')" id="tab-clausulas">
+        <span class="icon">☰</span> Cláusulas legales
+      </button>
+    </div>
+    <div class="sidebar-divider"></div>
+    <div class="sidebar-section">
+      <div class="sidebar-label">Empresa</div>
+      <button class="sidebar-btn" onclick="showPanel('empresa')" id="tab-empresa">
+        <span class="icon">○</span> Datos de X21
+      </button>
+    </div>
+  </nav>
+
+  <!-- ── MAIN ── -->
+  <main class="main">
+
+    <!-- PERFILES Y RATES -->
+    <div class="section-panel active" id="panel-perfiles">
+      <div class="section-title">Perfiles y rates</div>
+      <div class="section-desc">Define los perfiles profesionales de X21 y su tarifa por hora. Se usarán para calcular automáticamente el presupuesto en las propuestas.</div>
+      <table class="list-table" id="tabla-perfiles">
+        <thead>
+          <tr>
+            <th style="width:35%">Perfil</th>
+            <th style="width:35%">Descripción corta</th>
+            <th style="width:15%">Rate/hora (€)</th>
+            <th style="width:15%">Rate/día (€)</th>
+            <th class="td-actions"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody-perfiles"></tbody>
+      </table>
+      <button class="btn-add-row" onclick="addRow('perfiles')">+ Añadir perfil</button>
+      <div style="margin-top:24px">
+        <button class="btn-save" onclick="saveSection('perfiles')">Guardar perfiles</button>
+      </div>
+    </div>
+
+    <!-- TIPOS DE SERVICIO -->
+    <div class="section-panel" id="panel-servicios">
+      <div class="section-title">Tipos de servicio</div>
+      <div class="section-desc">Categorías de servicios que ofrece X21. Se usarán para clasificar oportunidades y propuestas.</div>
+      <table class="list-table" id="tabla-servicios">
+        <thead>
+          <tr>
+            <th style="width:30%">Nombre del servicio</th>
+            <th style="width:50%">Descripción</th>
+            <th style="width:20%">Tipo contrato</th>
+            <th class="td-actions"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody-servicios"></tbody>
+      </table>
+      <button class="btn-add-row" onclick="addRow('servicios')">+ Añadir servicio</button>
+      <div style="margin-top:24px">
+        <button class="btn-save" onclick="saveSection('servicios')">Guardar servicios</button>
+      </div>
+    </div>
+
+    <!-- CLÁUSULAS LEGALES -->
+    <div class="section-panel" id="panel-clausulas">
+      <div class="section-title">Cláusulas legales</div>
+      <div class="section-desc">Textos fijos que aparecen en el pie de cada propuesta. Puedes tener versiones en español e inglés, y distintas cláusulas según el tipo de contrato.</div>
+
+      <div class="lang-tabs">
+        <button class="lang-tab active" onclick="setLang('es')" id="lang-es">🇪🇸 Español</button>
+        <button class="lang-tab" onclick="setLang('en')" id="lang-en">🇬🇧 English</button>
+      </div>
+
+      <!-- ES -->
+      <div id="clausulas-es">
+        <div style="display:flex;gap:16px;margin-bottom:20px">
+          <div style="flex:1">
+            <span class="badge badge-fee" style="margin-bottom:10px;display:inline-block">Fee mensual</span>
+            <div class="field-group">
+              <label class="field-label">Validez</label>
+              <input class="field-input" id="es-fee-validez" placeholder="Esta propuesta es válida por 30 días desde la fecha de la misma.">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Forma de pago</label>
+              <textarea class="text-field" id="es-fee-pago" style="min-height:70px" placeholder="Pago mensual por adelantado mediante transferencia bancaria."></textarea>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Cláusula IVA</label>
+              <input class="field-input" id="es-fee-iva" placeholder="No incluye IVA.">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Gastos excluidos</label>
+              <textarea class="text-field" id="es-fee-gastos" style="min-height:70px" placeholder="Este presupuesto no incluye gastos de..."></textarea>
+            </div>
+          </div>
+          <div style="flex:1">
+            <span class="badge badge-proyecto" style="margin-bottom:10px;display:inline-block">Proyecto</span>
+            <div class="field-group">
+              <label class="field-label">Validez</label>
+              <input class="field-input" id="es-proyecto-validez" placeholder="Esta propuesta es válida por 30 días desde la fecha de la misma.">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Forma de pago</label>
+              <textarea class="text-field" id="es-proyecto-pago" style="min-height:70px" placeholder="50% a la firma, 50% a la entrega."></textarea>
+            </div>
+            <div class="field-group">
+              <label class="field-label">Cláusula IVA</label>
+              <input class="field-input" id="es-proyecto-iva" placeholder="No incluye IVA.">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Gastos excluidos</label>
+              <textarea class="text-field" id="es-proyecto-gastos" style="min-height:70px" placeholder="Este presupuesto no incluye gastos de..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EN -->
+      <div id="clausulas-en" style="display:none">
+        <div style="display:flex;gap:16px;margin-bottom:20px">
+          <div style="flex:1">
+            <span class="badge badge-fee" style="margin-bottom:10px;display:inline-block">Monthly retainer</span>
+            <div class="field-group">
+              <label class="field-label">Validity</label>
+              <input class="field-input" id="en-fee-validez" placeholder="This proposal is valid for 30 days from the date of issue.">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Payment terms</label>
+              <textarea class="text-field" id="en-fee-pago" style="min-height:70px" placeholder="Monthly payment in advance by bank transfer."></textarea>
+            </div>
+            <div class="field-group">
+              <label class="field-label">VAT clause</label>
+              <input class="field-input" id="en-fee-iva" placeholder="VAT not included.">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Excluded expenses</label>
+              <textarea class="text-field" id="en-fee-gastos" style="min-height:70px" placeholder="This budget does not include expenses for..."></textarea>
+            </div>
+          </div>
+          <div style="flex:1">
+            <span class="badge badge-proyecto" style="margin-bottom:10px;display:inline-block">Project</span>
+            <div class="field-group">
+              <label class="field-label">Validity</label>
+              <input class="field-input" id="en-proyecto-validez" placeholder="This proposal is valid for 30 days from the date of issue.">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Payment terms</label>
+              <textarea class="text-field" id="en-proyecto-pago" style="min-height:70px" placeholder="50% upon signing, 50% upon delivery."></textarea>
+            </div>
+            <div class="field-group">
+              <label class="field-label">VAT clause</label>
+              <input class="field-input" id="en-proyecto-iva" placeholder="VAT not included.">
+            </div>
+            <div class="field-group">
+              <label class="field-label">Excluded expenses</label>
+              <textarea class="text-field" id="en-proyecto-gastos" style="min-height:70px" placeholder="This budget does not include expenses for..."></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-save" onclick="saveSection('clausulas')">Guardar cláusulas</button>
+    </div>
+
+    <!-- DATOS DE EMPRESA -->
+    <div class="section-panel" id="panel-empresa">
+      <div class="section-title">Datos de X21</div>
+      <div class="section-desc">Información de la empresa que aparece en las propuestas: cuenta bancaria, datos fiscales y datos de firma.</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+        <div class="field-group">
+          <label class="field-label">Razón social</label>
+          <input class="field-input" id="emp-razon" placeholder="X21 Consulting S.L.">
+        </div>
+        <div class="field-group">
+          <label class="field-label">NIF / CIF</label>
+          <input class="field-input" id="emp-nif" placeholder="B-XXXXXXXX">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Dirección</label>
+          <input class="field-input" id="emp-direccion" placeholder="Calle, número, ciudad">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Ciudad</label>
+          <input class="field-input" id="emp-ciudad" placeholder="Madrid">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Nombre firmante</label>
+          <input class="field-input" id="emp-firmante" placeholder="Juan Cardona Soriano">
+        </div>
+        <div class="field-group">
+          <label class="field-label">Cargo firmante</label>
+          <input class="field-input" id="emp-cargo" placeholder="CEO de X21">
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Número de cuenta (IBAN)</label>
+        <input class="field-input cell-mono" id="emp-iban" placeholder="ES04 0186 5001 62 0523914987">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Email de envío de propuestas</label>
+        <input class="field-input" id="emp-email" type="email" placeholder="juan@x21.consulting">
+      </div>
+      <div style="margin-top:8px">
+        <button class="btn-save" onclick="saveSection('empresa')">Guardar datos</button>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script src="shared/x21-core.js"></script>
+<script>
+requireAuth();
+
+const $ = id => document.getElementById(id);
+let currentLang = 'es';
+let data = { perfiles:[], servicios:[], clausulas:{}, empresa:{} };
+
+// ── NAVIGATION ───────────────────────────────────────────
+function showPanel(name) {
+  document.querySelectorAll('.section-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
+  $('panel-' + name).classList.add('active');
+  $('tab-' + name).classList.add('active');
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  $('clausulas-es').style.display = lang === 'es' ? 'block' : 'none';
+  $('clausulas-en').style.display = lang === 'en' ? 'block' : 'none';
+  $('lang-es').classList.toggle('active', lang === 'es');
+  $('lang-en').classList.toggle('active', lang === 'en');
+}
+
+// ── SYNC STATUS ──────────────────────────────────────────
+function setSyncStatus(state, msg) {
+  const el = $('syncStatus');
+  el.textContent = msg;
+  el.className = 'sync-status ' + state;
+}
+
+// ── ROWS: PERFILES ───────────────────────────────────────
+function renderPerfiles() {
+  const tbody = $('tbody-perfiles');
+  tbody.innerHTML = data.perfiles.map((r, i) => `
+    <tr>
+      <td><input class="cell-input" value="${esc(r.perfil||'')}" onchange="data.perfiles[${i}].perfil=this.value" placeholder="ej. Senior Consultant"></td>
+      <td><input class="cell-input" value="${esc(r.descripcion||'')}" onchange="data.perfiles[${i}].descripcion=this.value" placeholder="Descripción corta"></td>
+      <td><input class="cell-input cell-mono" type="number" value="${r.rate_hora||''}" onchange="data.perfiles[${i}].rate_hora=this.value" placeholder="150"></td>
+      <td><input class="cell-input cell-mono" type="number" value="${r.rate_dia||''}" onchange="data.perfiles[${i}].rate_dia=this.value" placeholder="1000"></td>
+      <td class="td-actions"><button class="del-row" onclick="delRow('perfiles',${i})" title="Eliminar">✕</button></td>
+    </tr>`).join('');
+}
+
+function addRow(section) {
+  if (section === 'perfiles') {
+    data.perfiles.push({ perfil:'', descripcion:'', rate_hora:'', rate_dia:'' });
+    renderPerfiles();
+    const inputs = $('tbody-perfiles').querySelectorAll('input');
+    if (inputs.length) inputs[inputs.length - 4].focus();
+  }
+  if (section === 'servicios') {
+    data.servicios.push({ nombre:'', descripcion:'', tipo:'proyecto' });
+    renderServicios();
+    const inputs = $('tbody-servicios').querySelectorAll('input');
+    if (inputs.length) inputs[inputs.length - 2].focus();
+  }
+}
+
+function delRow(section, i) {
+  data[section].splice(i, 1);
+  if (section === 'perfiles') renderPerfiles();
+  if (section === 'servicios') renderServicios();
+}
+
+// ── ROWS: SERVICIOS ──────────────────────────────────────
+function renderServicios() {
+  const tbody = $('tbody-servicios');
+  tbody.innerHTML = data.servicios.map((r, i) => `
+    <tr>
+      <td><input class="cell-input" value="${esc(r.nombre||'')}" onchange="data.servicios[${i}].nombre=this.value" placeholder="ej. PR & Media Relations"></td>
+      <td><input class="cell-input" value="${esc(r.descripcion||'')}" onchange="data.servicios[${i}].descripcion=this.value" placeholder="Descripción breve del servicio"></td>
+      <td>
+        <select class="cell-select" onchange="data.servicios[${i}].tipo=this.value">
+          <option value="ambos" ${r.tipo==='ambos'?'selected':''}>Fee y Proyecto</option>
+          <option value="fee" ${r.tipo==='fee'?'selected':''}>Solo Fee</option>
+          <option value="proyecto" ${r.tipo==='proyecto'?'selected':''}>Solo Proyecto</option>
+        </select>
+      </td>
+      <td class="td-actions"><button class="del-row" onclick="delRow('servicios',${i})" title="Eliminar">✕</button></td>
+    </tr>`).join('');
+}
+
+// ── CLÁUSULAS: leer/escribir campos ──────────────────────
+function clausulasToFields(c) {
+  const fields = ['es-fee-validez','es-fee-pago','es-fee-iva','es-fee-gastos',
+                  'es-proyecto-validez','es-proyecto-pago','es-proyecto-iva','es-proyecto-gastos',
+                  'en-fee-validez','en-fee-pago','en-fee-iva','en-fee-gastos',
+                  'en-proyecto-validez','en-proyecto-pago','en-proyecto-iva','en-proyecto-gastos'];
+  fields.forEach(f => { if ($(f) && c[f]) $(f).value = c[f]; });
+}
+function clausulasFromFields() {
+  const fields = ['es-fee-validez','es-fee-pago','es-fee-iva','es-fee-gastos',
+                  'es-proyecto-validez','es-proyecto-pago','es-proyecto-iva','es-proyecto-gastos',
+                  'en-fee-validez','en-fee-pago','en-fee-iva','en-fee-gastos',
+                  'en-proyecto-validez','en-proyecto-pago','en-proyecto-iva','en-proyecto-gastos'];
+  const obj = {};
+  fields.forEach(f => { if ($(f)) obj[f] = $(f).value; });
+  return obj;
+}
+
+// ── EMPRESA: leer/escribir campos ────────────────────────
+function empresaToFields(e) {
+  ['razon','nif','direccion','ciudad','firmante','cargo','iban','email'].forEach(k => {
+    if ($('emp-' + k) && e[k]) $('emp-' + k).value = e[k];
+  });
+}
+function empresaFromFields() {
+  const obj = {};
+  ['razon','nif','direccion','ciudad','firmante','cargo','iban','email'].forEach(k => {
+    obj[k] = $('emp-' + k)?.value || '';
+  });
+  return obj;
+}
+
+// ── LOAD ─────────────────────────────────────────────────
+async function loadListas() {
+  setSyncStatus('saving', 'Cargando...');
+  try {
+    if (isLocalSession()) {
+      const saved = localStorage.getItem('x21_config');
+      if (saved) data = JSON.parse(saved);
+    } else {
+      const res = await apiCall({ action: 'getConfig' });
+      if (res.ok) data = res.data;
+    }
+    renderPerfiles();
+    renderServicios();
+    clausulasToFields(data.clausulas || {});
+    empresaToFields(data.empresa || {});
+    setSyncStatus('saved', 'Sincronizado');
+  } catch(e) {
+    setSyncStatus('', 'Error al cargar');
+  }
+}
+
+// ── SAVE ─────────────────────────────────────────────────
+async function saveSection(section) {
+  if (section === 'clausulas') data.clausulas = clausulasFromFields();
+  if (section === 'empresa')   data.empresa   = empresaFromFields();
+
+  setSyncStatus('saving', 'Guardando...');
+  try {
+    if (isLocalSession()) {
+      localStorage.setItem('x21_config', JSON.stringify(data));
+    } else {
+      const res = await apiCall({ action: 'saveConfig', data: JSON.stringify(data) });
+      if (!res.ok) { setSyncStatus('', 'Error al guardar'); toast('Error al guardar'); return; }
+    }
+    setSyncStatus('saved', 'Guardado ✓');
+    toast('Cambios guardados');
+  } catch(e) {
+    setSyncStatus('', 'Error de conexión');
+    toast('Error de conexión');
+  }
+}
+
+// ── UTILS ────────────────────────────────────────────────
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadListas();
+</script>
+</body>
+</html>
